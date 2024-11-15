@@ -7,7 +7,10 @@
     <h1>CORS Test Page</h1>
     <button onclick="testCORS()">Test API</button>
     <p id="result"></p>
-    <p id="rawResponse"></p>
+    <h2>Raw Response:</h2>
+    <pre id="rawResponse"></pre>
+    <h2>Response Headers:</h2>
+    <pre id="responseHeaders"></pre>
 
     <script>
     function testCORS() {
@@ -18,21 +21,26 @@
             },
         })
         .then(response => {
-            // Log the raw response
-            response.text().then(text => {
-                document.getElementById('rawResponse').textContent = 'Raw response: ' + text;
-            });
-            
-            // Check if the response is JSON
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                return response.json();
-            } else {
-                throw new Error('Response is not JSON');
+            // Log response headers
+            let headerText = '';
+            for (let pair of response.headers.entries()) {
+                headerText += pair[0] + ': ' + pair[1] + '\n';
             }
+            document.getElementById('responseHeaders').textContent = headerText;
+
+            // Log the raw response
+            return response.text().then(text => {
+                document.getElementById('rawResponse').textContent = text;
+                return text;
+            });
         })
-        .then(data => {
-            document.getElementById('result').innerHTML = 'Success: ' + JSON.stringify(data);
+        .then(text => {
+            try {
+                const data = JSON.parse(text);
+                document.getElementById('result').innerHTML = 'Success: ' + JSON.stringify(data);
+            } catch (error) {
+                throw new Error('Failed to parse JSON: ' + error.message);
+            }
         })
         .catch(error => {
             document.getElementById('result').innerHTML = 'Error: ' + error;
