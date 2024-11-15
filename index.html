@@ -7,6 +7,7 @@
     <h1>CORS Test Page</h1>
     <button onclick="testCORS()">Test API</button>
     <p id="result"></p>
+    <p id="rawResponse"></p>
 
     <script>
     function testCORS() {
@@ -16,7 +17,20 @@
                 'Content-Type': 'application/json',
             },
         })
-        .then(response => response.json())
+        .then(response => {
+            // Log the raw response
+            response.text().then(text => {
+                document.getElementById('rawResponse').textContent = 'Raw response: ' + text;
+            });
+            
+            // Check if the response is JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                throw new Error('Response is not JSON');
+            }
+        })
         .then(data => {
             document.getElementById('result').innerHTML = 'Success: ' + JSON.stringify(data);
         })
