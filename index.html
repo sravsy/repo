@@ -17,7 +17,7 @@
         fetch('https://liu1wq1vyd.execute-api.ap-southeast-2.amazonaws.com/get-user-info', {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
+                'Accept': 'application/json, text/plain',
             },
         })
         .then(response => {
@@ -31,16 +31,20 @@
             // Log the raw response
             return response.text().then(text => {
                 document.getElementById('rawResponse').textContent = text;
-                return text;
+                return { text, contentType: response.headers.get('content-type') };
             });
         })
-        .then(text => {
-            try {
-                const data = JSON.parse(text);
-                document.getElementById('result').innerHTML = 'Success: ' + JSON.stringify(data);
-            } catch (error) {
-                throw new Error('Failed to parse JSON: ' + error.message);
+        .then(({ text, contentType }) => {
+            if (contentType && contentType.includes('application/json')) {
+                // If it's JSON, parse it
+                return JSON.parse(text);
+            } else {
+                // If it's not JSON, return it as is
+                return text;
             }
+        })
+        .then(data => {
+            document.getElementById('result').innerHTML = 'Success: ' + JSON.stringify(data);
         })
         .catch(error => {
             document.getElementById('result').innerHTML = 'Error: ' + error;
